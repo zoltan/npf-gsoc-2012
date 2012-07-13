@@ -117,16 +117,13 @@ npf_named_ruleset_insert(const char *name, npf_ruleset_t *rlset, npf_rule_t *new
 {
 	npf_rule_t *rl;
 
-	printf("npf_named_ruleset_insert called\n");
 	KASSERT(npf_core_locked());
 	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
 		if (strncmp(rl->r_name, name, NPF_RNAME_LEN) == 0) {
 			npf_ruleset_insert(&rl->r_subset, newrl);
 			int res = count_rules(&rl->r_subset);
-			printf("ennyi van benne: %d\n", res);
 			return res;
 		} else {
-			printf("checking subrules\n");
 			int res;
 			if ((res = npf_named_ruleset_insert(name, &rl->r_subset, newrl)) > 0) {
 				return res;
@@ -156,16 +153,13 @@ npf_named_ruleset_remove(const char *name, npf_ruleset_t *rlset, npf_rule_t *new
 	npf_rule_t *rl;
 	const uint32_t targethash = hash32_buf(newrl->r_ncode, newrl->r_nc_size, HASH32_BUF_INIT);
 
-	printf("npf_named_ruleset_remove called\n");
 	KASSERT(npf_core_locked());
 	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
 		if (strncmp(rl->r_name, name, NPF_RNAME_LEN) == 0) {
 			find_and_remove(targethash, &rl->r_subset);
 			int res = count_rules(&rl->r_subset);
-			printf("ennyi van torles utan benne: %d\n", res);
 			return res;
 		} else {
-			printf("checking subrules\n");
 			int res;
 			if ((res = npf_named_ruleset_remove(name, &rl->r_subset, newrl)) > 0) {
 				return res;
@@ -438,7 +432,6 @@ again:
 		if (nc && npf_ncode_process(npc, nc, nbuf, layer)) {
 			continue;
 		}/* else if ((nc == NULL) && !TAILQ_EMPTY(&rl->r_subset.rs_queue)) {
-			printf("kiertekeljuk a subrulet\n");
 			rl = npf_ruleset_inspect(npc, nbuf, &rl->r_subset, ifp, di, layer);
 		}*/
 		
