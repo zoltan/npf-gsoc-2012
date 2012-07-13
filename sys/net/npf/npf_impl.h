@@ -152,6 +152,8 @@ int		npfctl_reload(u_long, void *);
 int		npfctl_getconf(u_long, void *);
 int		npfctl_sessions_save(u_long, void *);
 int		npfctl_sessions_load(u_long, void *);
+int		npfctl_add_rule(u_long, void *);
+int		npfctl_remove_rule(u_long, void *);
 int		npfctl_update_rule(u_long, void *);
 int		npfctl_table(void *);
 
@@ -236,6 +238,8 @@ int		npf_table_match_addr(npf_tableset_t *, u_int,
 /* Ruleset interface. */
 npf_ruleset_t *	npf_ruleset_create(void);
 void		npf_ruleset_destroy(npf_ruleset_t *);
+int		npf_named_ruleset_insert(const char *, npf_ruleset_t *, npf_rule_t *);
+int		npf_named_ruleset_remove(const char *, npf_ruleset_t *, npf_rule_t *);
 void		npf_ruleset_insert(npf_ruleset_t *, npf_rule_t *);
 void		npf_ruleset_natreload(npf_ruleset_t *, npf_ruleset_t *);
 npf_rule_t *	npf_ruleset_matchnat(npf_ruleset_t *, npf_natpolicy_t *);

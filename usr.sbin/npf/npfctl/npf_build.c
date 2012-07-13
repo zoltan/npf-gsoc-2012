@@ -51,6 +51,7 @@ static nl_config_t *		npf_conf = NULL;
 static nl_rule_t *		current_group = NULL;
 static bool			npf_debug = false;
 static bool			defgroup_set = false;
+static nl_rule_t *		single_built_rule = NULL;
 
 void
 npfctl_config_init(bool debug)
@@ -85,6 +86,19 @@ npfctl_config_send(int fd)
 	npf_config_destroy(npf_conf);
 	return error;
 }
+
+int
+npfctl_add_rule_to_named_ruleset(const char *name, int fd)
+{
+	return npf_add_rule_to_named_ruleset(fd, name, single_built_rule);
+}
+
+int
+npfctl_remove_rule_from_named_ruleset(const char *name, int fd)
+{
+	return npf_remove_rule_from_named_ruleset(fd, name, single_built_rule);
+}
+
 
 bool
 npfctl_table_exists_p(const char *id)
@@ -450,6 +464,16 @@ npfctl_build_group(const char *name, int attr, u_int if_idx)
 	current_group = rl;
 }
 
+void
+npfctl_build_rulesetref(const char *name)
+{
+	nl_rule_t *rl;
+
+	rl = npf_rule_create(name, NPF_RULE_IN | NPF_RULE_OUT, 0);
+	assert(current_group != NULL);
+	npf_rule_insert(npf_conf, current_group, rl, NPF_PRI_NEXT);
+}
+
 /*
  * npfctl_build_rule: create a rule, build n-code from filter options,
  * if any, and insert into the ruleset of current group.
@@ -462,11 +486,18 @@ npfctl_build_rule(int attr, u_int if_idx, sa_family_t family,
 
 	rl = npf_rule_create(NULL, attr, if_idx);
 	npfctl_build_ncode(rl, family, op, fopts, false);
-	if (rproc && npf_rule_setproc(npf_conf, rl, rproc) != 0) {
-		yyerror("rule procedure '%s' is not defined", rproc);
+	
+	if (npf_conf != NULL) {
+		if (rproc && npf_rule_setproc(npf_conf, rl, rproc) != 0) {
+			yyerror("rule procedure '%s' is not defined", rproc);
+		}
+		if (current_group == NULL) {
+			yyerror("rule must belong to a group");
+		}
+		npf_rule_insert(npf_conf, current_group, rl, NPF_PRI_NEXT);
+	} else {
+		single_built_rule = rl;
 	}
-	assert(current_group != NULL);
-	npf_rule_insert(npf_conf, current_group, rl, NPF_PRI_NEXT);
 }
 
 /*

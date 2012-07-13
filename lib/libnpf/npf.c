@@ -700,6 +700,38 @@ _npf_table_foreach(nl_config_t *ncf, nl_table_callback_t func)
  */
 
 int
+npf_add_rule_to_named_ruleset(int fd, const char *rsname, nl_rule_t *rl)
+{
+	prop_dictionary_t rldict = rl->nrl_dict, errdict = NULL;
+	int error, numrules;
+
+	prop_dictionary_set_cstring(rldict, "name", rsname);
+	error = prop_dictionary_sendrecv_ioctl(rldict, fd,
+	    IOC_NPF_ADD_RULE, &errdict);
+	if (errdict) {
+		prop_dictionary_get_int32(errdict, "numrules", &numrules);
+		prop_object_release(errdict);
+	}
+	return error > 0 ? error : numrules;
+}
+
+int
+npf_remove_rule_from_named_ruleset(int fd, const char *rsname, nl_rule_t *rl)
+{
+	prop_dictionary_t rldict = rl->nrl_dict, errdict = NULL;
+	int error, numrules;
+
+	prop_dictionary_set_cstring(rldict, "name", rsname);
+	error = prop_dictionary_sendrecv_ioctl(rldict, fd,
+	    IOC_NPF_REMOVE_RULE, &errdict);
+	if (errdict) {
+		prop_dictionary_get_int32(errdict, "numrules", &numrules);
+		prop_object_release(errdict);
+	}
+	return error > 0 ? error : numrules;
+}
+
+int
 npf_update_rule(int fd, const char *rname __unused, nl_rule_t *rl)
 {
 	prop_dictionary_t rldict = rl->nrl_dict, errdict = NULL;

@@ -48,6 +48,7 @@ __RCSID("$NetBSD: npfctl.c,v 1.14 2012/07/01 23:21:07 rmind Exp $");
 extern int		yylineno, yycolumn;
 extern const char *	yyfilename;
 extern int		yyparse(void);
+extern int		yy_scan_string(const char *);
 extern void		yyrestart(FILE *);
 
 enum {
@@ -57,6 +58,7 @@ enum {
 	NPFCTL_SHOWCONF,
 	NPFCTL_FLUSH,
 	NPFCTL_TABLE,
+	NPFCTL_RULESET,
 	NPFCTL_STATS,
 	NPFCTL_SESSIONS_SAVE,
 	NPFCTL_SESSIONS_LOAD,
@@ -74,6 +76,8 @@ static struct operations_s {
 	{	"flush",		NPFCTL_FLUSH		},
 	/* Table */
 	{	"table",		NPFCTL_TABLE		},
+	/* Ruleset */
+	{	"ruleset",		NPFCTL_RULESET		},
 	/* Stats */
 	{	"stats",		NPFCTL_STATS		},
 	/* Sessions */
@@ -301,6 +305,30 @@ npfctl(int action, int argc, char **argv)
 		if (tbl.nct_action == 0) {
 			printf("%s\n", ret ? "not found" : "found");
 			exit(ret ? EXIT_FAILURE : EXIT_SUCCESS);
+		}
+		break;
+	case NPFCTL_RULESET:
+		if (argc < 4) {
+			usage();
+		}
+		if (strcmp(argv[3], "add") == 0) {
+			yy_scan_string(argv[4]);
+			yyparse();
+			ret = npfctl_add_rule_to_named_ruleset(argv[2], fd);
+			if (ret > 0) {
+				printf("Number of rules in ruleset: %d\n", ret);
+			}
+			exit(EXIT_SUCCESS);
+		} else if (strcmp(argv[3], "remove") == 0) {
+			yy_scan_string(argv[4]);
+			yyparse();
+			ret = npfctl_remove_rule_from_named_ruleset(argv[2], fd);
+			if (ret > 0) {
+				printf("Number of rules in ruleset: %d\n", ret);
+			}
+			exit(EXIT_SUCCESS);
+		} else {
+			usage();
 		}
 		break;
 	case NPFCTL_STATS:

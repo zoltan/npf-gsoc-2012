@@ -529,6 +529,83 @@ npfctl_getconf(u_long cmd, void *data)
 	return error;
 }
 
+int
+npfctl_add_rule(u_long cmd, void *data)
+{
+	struct plistref *pref = data;
+	prop_dictionary_t dict, errdict;
+	prop_object_t obj;
+	const char *name;
+	int error, numrules;
+
+	printf("npfctl_add_rule called\n");
+	/* Retrieve and construct the rule. */
+	error = prop_dictionary_copyin_ioctl(pref, cmd, &dict);
+	if (error) {
+		return error;
+	}
+
+	/* Dictionary for error reporting. */
+	errdict = prop_dictionary_create();
+
+	obj = prop_dictionary_get(dict, "name");
+	name = prop_string_cstring_nocopy(obj);
+	printf("the name we're adding this rule to: %s\n", name);
+	npf_rule_t *rl;
+	error = npf_mk_singlerule(dict, prop_array_create(), &rl, errdict);
+
+	npf_core_enter();
+	numrules = npf_named_ruleset_insert(name, npf_core_ruleset(), rl);
+	npf_core_exit();
+	prop_object_release(dict);
+
+	/* Error report. */
+	prop_dictionary_set_int32(errdict, "errno", error);
+	prop_dictionary_set_int32(errdict, "numrules", numrules);
+	prop_dictionary_copyout_ioctl(pref, cmd, errdict);
+	prop_object_release(errdict);
+	return error;
+}
+
+int
+npfctl_remove_rule(u_long cmd, void *data)
+{
+	struct plistref *pref = data;
+	prop_dictionary_t dict, errdict;
+	prop_object_t obj;
+	const char *name;
+	int error, numrules;
+
+	printf("npfctl_remove_rule called\n");
+	/* Retrieve and construct the rule. */
+	error = prop_dictionary_copyin_ioctl(pref, cmd, &dict);
+	if (error) {
+		return error;
+	}
+
+	/* Dictionary for error reporting. */
+	errdict = prop_dictionary_create();
+
+	obj = prop_dictionary_get(dict, "name");
+	name = prop_string_cstring_nocopy(obj);
+	printf("the name we are removing this rule from: %s\n", name);
+	npf_rule_t *rl;
+	error = npf_mk_singlerule(dict, prop_array_create(), &rl, errdict);
+
+	npf_core_enter();
+	numrules = npf_named_ruleset_remove(name, npf_core_ruleset(), rl);
+	npf_core_exit();
+	prop_object_release(dict);
+
+	/* Error report. */
+	prop_dictionary_set_int32(errdict, "errno", error);
+	prop_dictionary_set_int32(errdict, "numrules", numrules);
+	prop_dictionary_copyout_ioctl(pref, cmd, errdict);
+	prop_object_release(errdict);
+	return error;
+}
+
+
 /*
  * npfctl_update_rule: reload a specific rule identified by the name.
  */

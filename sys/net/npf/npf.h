@@ -237,5 +237,7 @@ typedef enum {
 #define	IOC_NPF_SESSIONS_LOAD	_IOW('N', 106, struct plistref)
 #define	IOC_NPF_UPDATE_RULE	_IOWR('N', 107, struct plistref)
 #define	IOC_NPF_GETCONF		_IOR('N', 108, struct plistref)
+#define IOC_NPF_ADD_RULE	_IOWR('N', 109, struct plistref)
+#define IOC_NPF_REMOVE_RULE	_IOWR('N', 110, struct plistref)
 
 #endif	/* _NPF_NET_H_ */

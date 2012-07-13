@@ -242,6 +242,12 @@ npf_dev_ioctl(dev_t dev, u_long cmd, void *data, int flag, lwp_t *l)
 	case IOC_NPF_UPDATE_RULE:
 		error = npfctl_update_rule(cmd, data);
 		break;
+	case IOC_NPF_ADD_RULE:
+		error = npfctl_add_rule(cmd, data);
+		break;
+	case IOC_NPF_REMOVE_RULE:
+		error = npfctl_remove_rule(cmd, data);
+		break;
 	default:
 		error = ENOTTY;
 		break;

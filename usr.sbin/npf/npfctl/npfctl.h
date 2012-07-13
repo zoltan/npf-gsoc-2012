@@ -160,10 +160,13 @@ int		npfctl_ncode_disassemble(nc_inf_t *, const void *, size_t);
 
 void		npfctl_config_init(bool);
 int		npfctl_config_send(int);
+int		npfctl_add_rule_to_named_ruleset(const char *, int);
+int		npfctl_remove_rule_from_named_ruleset(const char *, int);
 int		npfctl_config_show(int);
 
 void		npfctl_build_rproc(const char *, npfvar_t *);
 void		npfctl_build_group(const char *, int, u_int);
+void		npfctl_build_rulesetref(const char *);
 void		npfctl_build_rule(int, u_int, sa_family_t,
 		    const opt_proto_t *, const filt_opts_t *, const char *);
 void		npfctl_build_nat(int, int, u_int, const addr_port_t *,

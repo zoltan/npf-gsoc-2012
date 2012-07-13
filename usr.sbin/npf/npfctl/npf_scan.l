@@ -96,6 +96,7 @@ flags			return FLAGS;
 icmp-type		return ICMPTYPE;
 code			return CODE;
 any			return ANY;
+ruleset			return RULESETREF;
 
 "/"			return SLASH;
 "{"			return CURLY_OPEN;

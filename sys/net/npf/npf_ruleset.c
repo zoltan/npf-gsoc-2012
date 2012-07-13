@@ -100,6 +100,81 @@ npf_ruleset_destroy(npf_ruleset_t *rlset)
 	kmem_free(rlset, sizeof(npf_ruleset_t));
 }
 
+static int
+count_rules(npf_ruleset_t *rlset)
+{
+	npf_rule_t *rl;
+	int counter = 0;
+
+	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
+		counter++;
+	}
+	return counter;
+}
+
+int
+npf_named_ruleset_insert(const char *name, npf_ruleset_t *rlset, npf_rule_t *newrl)
+{
+	npf_rule_t *rl;
+
+	printf("npf_named_ruleset_insert called\n");
+	KASSERT(npf_core_locked());
+	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
+		if (strncmp(rl->r_name, name, NPF_RNAME_LEN) == 0) {
+			npf_ruleset_insert(&rl->r_subset, newrl);
+			int res = count_rules(&rl->r_subset);
+			printf("ennyi van benne: %d\n", res);
+			return res;
+		} else {
+			printf("checking subrules\n");
+			int res;
+			if ((res = npf_named_ruleset_insert(name, &rl->r_subset, newrl)) > 0) {
+				return res;
+			}
+		}
+	}
+	return 0;
+}
+
+static void
+find_and_remove(const uint32_t targethash, npf_ruleset_t *rlset) {
+	npf_rule_t *rl, *rl2;
+
+	TAILQ_FOREACH_SAFE(rl, &rlset->rs_queue, r_entry, rl2) {
+		uint32_t rulehash = hash32_buf(rl->r_ncode, rl->r_nc_size, HASH32_BUF_INIT);
+		
+		if (rulehash == targethash) {
+			TAILQ_REMOVE(&rlset->rs_queue, rl, r_entry);
+			break;
+		}
+	}
+}
+
+int
+npf_named_ruleset_remove(const char *name, npf_ruleset_t *rlset, npf_rule_t *newrl)
+{
+	npf_rule_t *rl;
+	const uint32_t targethash = hash32_buf(newrl->r_ncode, newrl->r_nc_size, HASH32_BUF_INIT);
+
+	printf("npf_named_ruleset_remove called\n");
+	KASSERT(npf_core_locked());
+	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
+		if (strncmp(rl->r_name, name, NPF_RNAME_LEN) == 0) {
+			find_and_remove(targethash, &rl->r_subset);
+			int res = count_rules(&rl->r_subset);
+			printf("ennyi van torles utan benne: %d\n", res);
+			return res;
+		} else {
+			printf("checking subrules\n");
+			int res;
+			if ((res = npf_named_ruleset_remove(name, &rl->r_subset, newrl)) > 0) {
+				return res;
+			}
+		}
+	}
+	return 0;
+}
+
 /*
  * npf_ruleset_insert: insert the rule into the specified ruleset.
  *
@@ -343,6 +418,7 @@ npf_ruleset_inspect(npf_cache_t *npc, nbuf_t *nbuf, npf_ruleset_t *mainrlset,
 
 	KASSERT(npf_core_locked());
 	KASSERT(((di & PFIL_IN) != 0) ^ ((di & PFIL_OUT) != 0));
+
 again:
 	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
 		KASSERT(!final_rl || rl->r_priority >= final_rl->r_priority);
@@ -358,9 +434,14 @@ again:
 		}
 		/* Process the n-code, if any. */
 		const void *nc = rl->r_ncode;
+		
 		if (nc && npf_ncode_process(npc, nc, nbuf, layer)) {
 			continue;
-		}
+		}/* else if ((nc == NULL) && !TAILQ_EMPTY(&rl->r_subset.rs_queue)) {
+			printf("kiertekeljuk a subrulet\n");
+			rl = npf_ruleset_inspect(npc, nbuf, &rl->r_subset, ifp, di, layer);
+		}*/
+		
 		/* Set the matching rule and check for "final". */
 		final_rl = rl;
 		if (rl->r_attr & NPF_RULE_FINAL) {

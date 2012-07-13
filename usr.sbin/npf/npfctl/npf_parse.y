@@ -113,6 +113,7 @@ yyerror(const char *fmt, ...)
 %token			RETURN
 %token			RETURNICMP
 %token			RETURNRST
+%token			RULESETREF
 %token			SEPLINE
 %token			SLASH
 %token			STATEFUL
@@ -172,6 +173,7 @@ line
 	| map
 	| group
 	| rproc
+	| rule
 	|
 	;
 
@@ -431,6 +433,7 @@ rule
 		npfctl_build_rule($1 | $2 | $3 | $4, $5,
 		    $6, &$7, &$8, $9);
 	}
+	| RULESETREF STRING	{ npfctl_build_rulesetref($2); }
 	|
 	;
 
