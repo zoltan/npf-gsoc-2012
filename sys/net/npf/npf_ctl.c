@@ -538,7 +538,6 @@ npfctl_add_rule(u_long cmd, void *data)
 	const char *name;
 	int error, numrules;
 
-	printf("npfctl_add_rule called\n");
 	/* Retrieve and construct the rule. */
 	error = prop_dictionary_copyin_ioctl(pref, cmd, &dict);
 	if (error) {
@@ -550,7 +549,6 @@ npfctl_add_rule(u_long cmd, void *data)
 
 	obj = prop_dictionary_get(dict, "name");
 	name = prop_string_cstring_nocopy(obj);
-	printf("the name we're adding this rule to: %s\n", name);
 	npf_rule_t *rl;
 	error = npf_mk_singlerule(dict, prop_array_create(), &rl, errdict);
 
@@ -576,7 +574,6 @@ npfctl_remove_rule(u_long cmd, void *data)
 	const char *name;
 	int error, numrules;
 
-	printf("npfctl_remove_rule called\n");
 	/* Retrieve and construct the rule. */
 	error = prop_dictionary_copyin_ioctl(pref, cmd, &dict);
 	if (error) {
@@ -588,7 +585,6 @@ npfctl_remove_rule(u_long cmd, void *data)
 
 	obj = prop_dictionary_get(dict, "name");
 	name = prop_string_cstring_nocopy(obj);
-	printf("the name we are removing this rule from: %s\n", name);
 	npf_rule_t *rl;
 	error = npf_mk_singlerule(dict, prop_array_create(), &rl, errdict);
 
