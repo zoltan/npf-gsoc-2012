@@ -1,4 +1,4 @@
-/*	$NetBSD: npf_nat.c,v 1.15 2012/07/15 00:23:00 rmind Exp $	*/
+/*	$NetBSD: npf_nat.c,v 1.17 2012/08/15 18:44:56 rmind Exp $	*/
 
 /*-
  * Copyright (c) 2010-2012 The NetBSD Foundation, Inc.
@@ -76,7 +76,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: npf_nat.c,v 1.15 2012/07/15 00:23:00 rmind Exp $");
+__KERNEL_RCSID(0, "$NetBSD: npf_nat.c,v 1.17 2012/08/15 18:44:56 rmind Exp $");
 
 #include <sys/param.h>
 #include <sys/types.h>
@@ -417,7 +417,8 @@ npf_nat_putport(npf_natpolicy_t *np, in_port_t port)
  * npf_nat_inspect: inspect packet against NAT ruleset and return a policy.
  */
 static npf_natpolicy_t *
-npf_nat_inspect(npf_cache_t *npc, nbuf_t *nbuf, ifnet_t *ifp, const int di)
+npf_nat_inspect(npf_cache_t *npc, nbuf_t *nbuf, const ifnet_t *ifp,
+    const int di)
 {
 	npf_ruleset_t *rlset;
 	npf_natpolicy_t *np;
@@ -582,7 +583,7 @@ npf_nat_translate(npf_cache_t *npc, nbuf_t *nbuf, npf_nat_t *nt,
  */
 int
 npf_do_nat(npf_cache_t *npc, npf_session_t *se, nbuf_t *nbuf,
-    ifnet_t *ifp, const int di)
+    const ifnet_t *ifp, const int di)
 {
 	npf_session_t *nse = NULL;
 	npf_natpolicy_t *np;
@@ -643,7 +644,7 @@ npf_do_nat(npf_cache_t *npc, npf_session_t *se, nbuf_t *nbuf,
 	 * stream depends on other, stateless filtering rules.
 	 */
 	if (se == NULL) {
-		nse = npf_session_establish(npc, nbuf, di);
+		nse = npf_session_establish(npc, nbuf, ifp, di);
 		if (nse == NULL) {
 			error = ENOMEM;
 			goto out;
@@ -750,7 +751,7 @@ npf_nat_save(prop_dictionary_t sedict, prop_array_t natlist, npf_nat_t *nt)
 	prop_object_iterator_t it;
 	prop_dictionary_t npdict;
 	prop_data_t nd, npd;
-	uintptr_t itnp;
+	uint64_t itnp;
 
 	/* Set NAT entry data. */
 	nd = prop_data_create_data(nt, sizeof(npf_nat_t));
@@ -761,8 +762,8 @@ npf_nat_save(prop_dictionary_t sedict, prop_array_t natlist, npf_nat_t *nt)
 	it = prop_array_iterator(natlist);
 	while ((npdict = prop_object_iterator_next(it)) != NULL) {
 		CTASSERT(sizeof(uintptr_t) <= sizeof(uint64_t));
-		prop_dictionary_get_uint64(npdict, "id-ptr", (uint64_t *)&itnp);
-		if (itnp == (uintptr_t)np) {
+		prop_dictionary_get_uint64(npdict, "id-ptr", &itnp);
+		if ((uintptr_t)itnp == (uintptr_t)np) {
 			break;
 		}
 	}
