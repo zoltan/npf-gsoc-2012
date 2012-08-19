@@ -161,13 +161,9 @@ int		npfctl_ncode_disassemble(nc_inf_t *, const void *, size_t);
 #define	NPFCTL_NAT_STATIC	2
 
 void		npfctl_config_init(bool);
-<<<<<<< npfctl.h
-int		npfctl_config_send(int);
 int		npfctl_add_rule_to_named_ruleset(const char *, int);
 int		npfctl_remove_rule_from_named_ruleset(const char *, int);
-=======
 int		npfctl_config_send(int, const char *);
->>>>>>> 1.19
 int		npfctl_config_show(int);
 unsigned long	npfctl_debug_addif(const char *);
 

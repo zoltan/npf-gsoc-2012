@@ -85,7 +85,6 @@ npfctl_config_send(int fd, const char *out)
 	return error;
 }
 
-<<<<<<< npf_build.c
 int
 npfctl_add_rule_to_named_ruleset(const char *name, int fd)
 {
@@ -98,8 +97,6 @@ npfctl_remove_rule_from_named_ruleset(const char *name, int fd)
 	return npf_remove_rule_from_named_ruleset(fd, name, single_built_rule);
 }
 
-
-=======
 unsigned long
 npfctl_debug_addif(const char *ifname)
 {
@@ -118,7 +115,6 @@ npfctl_debug_addif(const char *ifname)
 	return if_idx;
 }
 
->>>>>>> 1.13
 bool
 npfctl_table_exists_p(const char *id)
 {
