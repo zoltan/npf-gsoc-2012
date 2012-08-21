@@ -599,7 +599,12 @@ npfctl_build_nat(int type, u_int if_idx, sa_family_t family,
 	}
 
 	npfctl_build_ncode(nat, family, &op, fopts, false);
-	npf_nat_insert(npf_conf, nat, NPF_PRI_NEXT);
+	
+	if (npf_conf != NULL) {
+		npf_nat_insert(npf_conf, nat, NPF_PRI_NEXT);
+	} else {
+		single_built_rule = nat;
+	}
 }
 
 /*
