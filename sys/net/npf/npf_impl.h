@@ -146,6 +146,7 @@ int		npfctl_reload(u_long, void *);
 int		npfctl_getconf(u_long, void *);
 int		npfctl_sessions_save(u_long, void *);
 int		npfctl_sessions_load(u_long, void *);
+int		npfctl_add_nat_rule(u_long, void *);
 int		npfctl_add_rule(u_long, void *);
 int		npfctl_remove_rule(u_long, void *);
 int		npfctl_update_rule(u_long, void *);

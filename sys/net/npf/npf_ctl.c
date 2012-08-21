@@ -363,6 +363,72 @@ npf_mk_rules(npf_ruleset_t *rlset, prop_array_t rules, prop_array_t rprocs,
 	return error;
 }
 
+static int
+npf_insert_nat_rule(prop_dictionary_t natdict, prop_dictionary_t errdict) {
+	int error;
+	npf_natpolicy_t *np;
+	npf_rule_t *rl;
+	
+	printf("npf_insert_nat_rule\n");
+	if (prop_object_type(natdict) != PROP_TYPE_DICTIONARY) {
+		printf("rossz tipus!\n");
+		NPF_ERR_DEBUG(errdict);
+		return EINVAL;
+	}
+
+	/*
+	 * NAT policies are standard rules, plus additional
+	 * information for translation.  Make a rule.
+	 */
+	error = npf_mk_singlerule(natdict, NULL, &rl, errdict);
+	if (error) {
+		printf("hiba a mksinglerule alatt\n");
+		return error;
+	}
+
+	npf_core_enter();
+	printf("most ruleset inserteljuk\n");
+	npf_ruleset_insert(npf_core_natset(), rl);
+
+	/* Allocate a new NAT policy and assign to the rule. */
+	np = npf_nat_newpolicy(natdict, npf_core_natset());
+	if (np == NULL) {
+		printf("hiba a newpolicy alatt\n");
+		NPF_ERR_DEBUG(errdict);
+		return ENOMEM;
+	}
+	npf_rule_setnat(rl, np);
+
+	npf_core_exit();
+	
+	return 0;
+}
+
+int
+npfctl_add_nat_rule(u_long cmd, void *data)
+{
+	struct plistref *pref = data;
+	prop_dictionary_t dict, errdict;
+	int error;
+
+	/* Retrieve and construct the rule. */
+	error = prop_dictionary_copyin_ioctl(pref, cmd, &dict);
+	if (error) {
+		return error;
+	}
+
+	/* Dictionary for error reporting. */
+	errdict = prop_dictionary_create();
+
+	npf_insert_nat_rule(dict, errdict);
+
+	prop_object_release(dict);
+
+	prop_dictionary_copyout_ioctl(pref, cmd, errdict);
+	prop_object_release(errdict);
+	return error;
+}
+
 static int __noinline
 npf_mk_natlist(npf_ruleset_t *nset, prop_array_t natlist,
     prop_dictionary_t errdict)

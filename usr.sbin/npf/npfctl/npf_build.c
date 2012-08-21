@@ -44,11 +44,13 @@ __RCSID("$NetBSD: npf_build.c,v 1.13 2012/08/12 03:35:13 rmind Exp $");
 #include <string.h>
 #include <err.h>
 
+#include <arpa/inet.h>
+
 #include "npfctl.h"
 
 static nl_config_t *		npf_conf = NULL;
 static nl_rule_t *		current_group = NULL;
-static bool			npf_debug = false;
+static bool			npf_debug = true;
 static bool			defgroup_set = false;
 static nl_rule_t *		single_built_rule = NULL;
 
@@ -60,7 +62,7 @@ npfctl_config_init(bool debug)
 	if (npf_conf == NULL) {
 		errx(EXIT_FAILURE, "npf_config_create failed");
 	}
-	npf_debug = debug;
+	npf_debug = true;
 }
 
 int
@@ -135,6 +137,7 @@ npfctl_get_singleport(const npfvar_t *vp)
 		yyerror("port range is not valid");
 	}
 	port = &pr->pr_start;
+	printf("XXX port: %d\n", *port);
 	return *port;
 }
 
@@ -180,6 +183,8 @@ npfctl_build_fam(nc_ctx_t *nc, sa_family_t family,
 
 	switch (fam->fam_family) {
 	case AF_INET:
+		printf("mask: %d\n", fam->fam_mask);
+		printf("opts: %d\n", opts);
 		npfctl_gennc_v4cidr(nc, opts,
 		    &fam->fam_addr, fam->fam_mask);
 		break;
@@ -200,6 +205,7 @@ npfctl_build_vars(nc_ctx_t *nc, sa_family_t family, npfvar_t *vars, int opts)
 	size_t i;
 
 	npfctl_ncgen_group(nc);
+	printf("buld_vars, counts: %d\n", npfvar_get_count(vars));
 	for (i = 0; i < npfvar_get_count(vars); i++) {
 		void *data = npfvar_get_data(vars, type, i);
 		assert(data != NULL);
@@ -207,6 +213,7 @@ npfctl_build_vars(nc_ctx_t *nc, sa_family_t family, npfvar_t *vars, int opts)
 		switch (type) {
 		case NPFVAR_FAM: {
 			fam_addr_mask_t *fam = data;
+			printf("buildfam\n");
 			npfctl_build_fam(nc, family, fam, opts);
 			break;
 		}
@@ -242,6 +249,7 @@ npfctl_build_proto(nc_ctx_t *nc, sa_family_t family,
 	const int proto = op->op_proto;
 	int pflag = 0;
 
+	printf("proto: %d\n", proto);
 	switch (proto) {
 	case IPPROTO_TCP:
 		pflag = NC_MATCH_TCP;
@@ -352,6 +360,7 @@ npfctl_build_ncode(nl_rule_t *rl, sa_family_t family, const opt_proto_t *op,
 	int dstflag = NC_MATCH_DST;
 
 	if (invert) {
+		printf("invert!\n");
 		srcflag = NC_MATCH_DST;
 		dstflag = NC_MATCH_SRC;
 	}
@@ -359,14 +368,19 @@ npfctl_build_ncode(nl_rule_t *rl, sa_family_t family, const opt_proto_t *op,
 	nc = npfctl_ncgen_create();
 
 	/* Build layer 4 protocol blocks. */
+	printf("build?\n");
 	int pflag = npfctl_build_proto(nc, family, op, nof, nop);
 
 	/* Build IP address blocks. */
+	printf("from\n");
 	npfctl_build_vars(nc, family, apfrom->ap_netaddr, srcflag);
+	printf("to\n");
 	npfctl_build_vars(nc, family, apto->ap_netaddr, dstflag);
 
 	/* Build port-range blocks. */
+	printf("fromrange\n");
 	npfctl_build_vars(nc, family, apfrom->ap_portrange, srcflag | pflag);
+	printf("torange\n");
 	npfctl_build_vars(nc, family, apto->ap_portrange, dstflag | pflag);
 
 	/*
@@ -374,6 +388,7 @@ npfctl_build_ncode(nl_rule_t *rl, sa_family_t family, const opt_proto_t *op,
 	 */
 	code = npfctl_ncgen_complete(nc, &len);
 	if (npf_debug) {
+		printf("len: %d\n", len);
 		extern int yylineno;
 		printf("RULE AT LINE %d\n", yylineno);
 		npfctl_ncgen_print(code, len);
@@ -511,6 +526,7 @@ npfctl_build_rule(int attr, u_int if_idx, sa_family_t family,
 {
 	nl_rule_t *rl;
 
+	printf("if_idx for build_rule: %d\n", if_idx);
 	rl = npf_rule_create(NULL, attr, if_idx);
 	npfctl_build_ncode(rl, family, op, fopts, false);
 	
@@ -571,7 +587,10 @@ npfctl_build_nat(int type, u_int if_idx, sa_family_t family,
 				yyerror("inbound port is not specified");
 			}
 			port = npfctl_get_singleport(ap->ap_portrange);
+			printf("port: %u\n", port);
 		}
+		printf("if_idx: %d\n", if_idx);
+		printf("addr: %s\n", inet_ntoa(*((struct in_addr *)(&am->fam_addr))));
 		nat = npf_nat_create(NPF_NATIN, !binat ? NPF_NAT_PORTS : 0,
 		    if_idx, &am->fam_addr, am->fam_family, port);
 		break;

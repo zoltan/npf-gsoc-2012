@@ -710,6 +710,21 @@ _npf_table_foreach(nl_config_t *ncf, nl_table_callback_t func)
  */
 
 int
+npf_add_nat_rule(int fd, nl_nat_t *natrule)
+{
+	prop_dictionary_t rldict = natrule->nrl_dict, errdict = NULL;
+	int error;
+
+	error = prop_dictionary_sendrecv_ioctl(rldict, fd,
+		IOC_NPF_ADD_NAT_RULE, &errdict);
+
+	if (errdict) {
+		prop_object_release(errdict);
+	}
+	return error;
+}
+
+int
 npf_add_rule_to_named_ruleset(int fd, const char *rsname, nl_rule_t *rl)
 {
 	prop_dictionary_t rldict = rl->nrl_dict, errdict = NULL;

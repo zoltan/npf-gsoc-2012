@@ -435,21 +435,26 @@ npf_ruleset_inspect(npf_cache_t *npc, nbuf_t *nbuf, npf_ruleset_t *mainrlset,
 
 again:
 	TAILQ_FOREACH(rl, &rlset->rs_queue, r_entry) {
+		printf("foreachben!\n");
 		KASSERT(!final_rl || rl->r_priority >= final_rl->r_priority);
 
 		/* Match the interface. */
 		if (rl->r_ifid && rl->r_ifid != ifp->if_index) {
+			printf("rossz interface\n");
 			continue;
 		}
 		/* Match the direction. */
 		if ((rl->r_attr & NPF_RULE_DIMASK) != NPF_RULE_DIMASK) {
-			if ((rl->r_attr & di_mask) == 0)
+			if ((rl->r_attr & di_mask) == 0) {
+				printf("rossz direction\n");
 				continue;
+			}
 		}
 		/* Process the n-code, if any. */
 		const void *nc = rl->r_ncode;
 		
 		if (nc && npf_ncode_process(npc, nc, nbuf, layer)) {
+			printf("ncode nem stimmelt\n");
 			continue;
 		}/* else if ((nc == NULL) && !TAILQ_EMPTY(&rl->r_subset.rs_queue)) {
 			rl = npf_ruleset_inspect(npc, nbuf, &rl->r_subset, ifp, di, layer);

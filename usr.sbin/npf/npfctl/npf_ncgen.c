@@ -120,6 +120,7 @@ npfctl_ncgen_putptr(nc_ctx_t *ctx, void *nc)
 static void
 npfctl_ncgen_addjmp(nc_ctx_t *ctx, uint32_t **nc_ptr)
 {
+	printf("addjmp\n");
 	size_t reqlen, i = ctx->nc_jmp_it++;
 	uint32_t *nc = *nc_ptr;
 
@@ -145,6 +146,7 @@ npfctl_ncgen_addjmp(nc_ctx_t *ctx, uint32_t **nc_ptr)
 nc_ctx_t *
 npfctl_ncgen_create(void)
 {
+	printf("create\n");
 	return zalloc(sizeof(nc_ctx_t));
 }
 
@@ -155,6 +157,7 @@ npfctl_ncgen_create(void)
 void *
 npfctl_ncgen_complete(nc_ctx_t *ctx, size_t *sz)
 {
+	printf("complete\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 4 /* words */);
 	ptrdiff_t foff;
 	size_t i;
@@ -199,6 +202,7 @@ npfctl_ncgen_complete(nc_ctx_t *ctx, size_t *sz)
 void
 npfctl_ncgen_group(nc_ctx_t *ctx)
 {
+	printf("group\n");
 	assert(ctx->nc_expected == 0);
 	assert(ctx->nc_saved_it == 0);
 	ctx->nc_saved_it = ctx->nc_jmp_it;
@@ -210,6 +214,7 @@ npfctl_ncgen_group(nc_ctx_t *ctx)
 void
 npfctl_ncgen_endgroup(nc_ctx_t *ctx)
 {
+	printf("endgroup\n");
 	uint32_t *nc;
 
 	/* If there are no fragments or only one - nothing to do. */
@@ -250,6 +255,7 @@ void
 npfctl_gennc_v6cidr(nc_ctx_t *ctx, int opts, const npf_addr_t *netaddr,
     const npf_netmask_t mask)
 {
+	printf("v6cidr\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 9 /* words */);
 	const uint32_t *addr = (const uint32_t *)netaddr;
 
@@ -282,6 +288,7 @@ npfctl_gennc_v4cidr(nc_ctx_t *ctx, int opts, const npf_addr_t *netaddr,
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 6 /* words */);
 	const uint32_t *addr = (const uint32_t *)netaddr;
 
+	printf("v4cidr\n");
 	assert(((opts & NC_MATCH_SRC) != 0) ^ ((opts & NC_MATCH_DST) != 0));
 	assert((mask && mask <= NPF_MAX_NETMASK) || mask == NPF_NO_NETMASK);
 
@@ -306,6 +313,7 @@ npfctl_gennc_ports(nc_ctx_t *ctx, int opts, in_port_t from, in_port_t to)
 {
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 5 /* words */);
 
+	printf("ports %d %d\n", from, to);
 	assert(((opts & NC_MATCH_SRC) != 0) ^ ((opts & NC_MATCH_DST) != 0));
 	assert(((opts & NC_MATCH_TCP) != 0) ^ ((opts & NC_MATCH_UDP) != 0));
 
@@ -328,6 +336,7 @@ npfctl_gennc_ports(nc_ctx_t *ctx, int opts, in_port_t from, in_port_t to)
 void
 npfctl_gennc_icmp(nc_ctx_t *ctx, int type, int code)
 {
+	printf("icmp\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 4 /* words */);
 
 	/* OP, code, type (2 words) */
@@ -348,6 +357,7 @@ npfctl_gennc_icmp(nc_ctx_t *ctx, int type, int code)
 void
 npfctl_gennc_icmp6(nc_ctx_t *ctx, int type, int code)
 {
+	printf("icmp6\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 4 /* words */);
 
 	/* OP, code, type (2 words) */
@@ -369,6 +379,7 @@ npfctl_gennc_icmp6(nc_ctx_t *ctx, int type, int code)
 void
 npfctl_gennc_tbl(nc_ctx_t *ctx, int opts, u_int tableid)
 {
+	printf("tbl\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 5 /* words */);
 
 	assert(((opts & NC_MATCH_SRC) != 0) ^ ((opts & NC_MATCH_DST) != 0));
@@ -391,6 +402,7 @@ npfctl_gennc_tbl(nc_ctx_t *ctx, int opts, u_int tableid)
 void
 npfctl_gennc_tcpfl(nc_ctx_t *ctx, uint8_t tf, uint8_t tf_mask)
 {
+	printf("tcp\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 4 /* words */);
 
 	/* OP, code, type (2 words) */
@@ -410,6 +422,7 @@ npfctl_gennc_tcpfl(nc_ctx_t *ctx, uint8_t tf, uint8_t tf_mask)
 void
 npfctl_gennc_proto(nc_ctx_t *ctx, uint8_t addrlen, uint8_t proto)
 {
+	printf("proto\n");
 	uint32_t *nc = npfctl_ncgen_getptr(ctx, 4 /* words */);
 
 	/* OP, code, type (2 words) */

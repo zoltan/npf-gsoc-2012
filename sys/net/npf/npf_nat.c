@@ -428,13 +428,19 @@ npf_nat_inspect(npf_cache_t *npc, nbuf_t *nbuf, const ifnet_t *ifp,
 	rlset = npf_core_natset();
 	rl = npf_ruleset_inspect(npc, nbuf, rlset, ifp, di, NPF_LAYER_3);
 	if (rl == NULL) {
+		printf("npf_ruleset_inspect ures volt!\n");
 		npf_core_exit();
 		return NULL;
+	} else {
+	    printf("NAT ruleset stimmelt\n");
 	}
 	np = npf_rule_getnat(rl);
 	if (np == NULL) {
+		printf("npf_rule_getnat ures volt!\n");
 		npf_core_exit();
 		return NULL;
+	} else {
+		printf("npf_rule_getnat STIMMELT!\n");
 	}
 	return np;
 }
@@ -617,7 +623,7 @@ npf_do_nat(npf_cache_t *npc, npf_session_t *se, nbuf_t *nbuf,
 		return 0;
 	}
 	forw = true;
-
+	printf("forwarding!\n");
 	/*
 	 * Create a new NAT entry.  Note: it is safe to unlock, since the
 	 * NAT policy wont be desotroyed while there are list entries, which
@@ -626,8 +632,11 @@ npf_do_nat(npf_cache_t *npc, npf_session_t *se, nbuf_t *nbuf,
 	 */
 	nt = npf_nat_create(npc, np);
 	if (nt == NULL) {
+		printf("npf_nat_create returned NULL\n");
 		npf_core_exit();
 		return ENOMEM;
+	} else {
+	    printf("npf_nat_create was OK!\n");
 	}
 	npf_core_exit();
 	new = true;
@@ -644,8 +653,10 @@ npf_do_nat(npf_cache_t *npc, npf_session_t *se, nbuf_t *nbuf,
 	 * stream depends on other, stateless filtering rules.
 	 */
 	if (se == NULL) {
+		printf("establishing session\n");
 		nse = npf_session_establish(npc, nbuf, ifp, di);
 		if (nse == NULL) {
+			printf("npf_session_establis error\n");
 			error = ENOMEM;
 			goto out;
 		}
@@ -655,7 +666,10 @@ translate:
 	/* Perform the translation. */
 	error = npf_nat_translate(npc, nbuf, nt, forw, di);
 	if (error) {
+		printf("error during translation!\n");
 		goto out;
+	} else {
+		printf("translated!\n");
 	}
 
 	if (__predict_false(new)) {
@@ -673,8 +687,10 @@ out:
 			}
 			/* Will free the structure and return the port. */
 			npf_nat_expire(nt);
+			printf("npf_session_setnat hiba\n");
 		}
 		if (nse) {
+			printf("npf_session_release\n");
 			npf_session_release(nse);
 		}
 	}

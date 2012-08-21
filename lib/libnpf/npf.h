@@ -102,6 +102,8 @@ bool		npf_table_exists_p(nl_config_t *, u_int);
 int		npf_table_insert(nl_config_t *, nl_table_t *);
 void		npf_table_destroy(nl_table_t *);
 
+int		npf_add_nat_rule(int, nl_nat_t *);
+
 int		npf_add_rule_to_named_ruleset(int fd, const char *rsname, nl_rule_t *rl);
 int		npf_remove_rule_from_named_ruleset(int fd, const char *rsname, nl_rule_t *rl);
 int		npf_update_rule(int, const char *, nl_rule_t *);
